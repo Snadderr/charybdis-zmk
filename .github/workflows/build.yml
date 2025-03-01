@@ -1,51 +1,5 @@
-name: Build ZMK Firmware
-
-on:
-  push:
-    branches:
-      - charybdis
-  pull_request:
-    branches:
-      - charybdis
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Install Zephyr dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip ninja-build cmake gcc-arm-none-eabi gperf
-          pip3 install --user west
-          pip3 install --user setuptools wheel
-
-      - name: Fetch ZMK firmware
-        run: |
-          git clone --depth 1 https://github.com/zmkfirmware/zmk.git zmk_firmware
-          cd zmk_firmware
-          west init -l app
-          west update
-          west zephyr-export
-          # Remove broken 'requirements.txt' step and replace with correct dependencies
-          pip3 install --user -r zephyr/scripts/requirements-base.txt
-
-      - name: Build Charybdis Firmware (Left)
-        run: |
-          cd zmk_firmware
-          west build -s app -b nice_nano_v2 -- -DZMK_CONFIG=$GITHUB_WORKSPACE/config -DSHIELD=charybdis_left
-
-      - name: Build Charybdis Firmware (Right)
-        run: |
-          cd zmk_firmware
-          west build -s app -b nice_nano_v2 -- -DZMK_CONFIG=$GITHUB_WORKSPACE/config -DSHIELD=charybdis_right
-
-      - name: Upload Firmware
-        uses: actions/upload-artifact@v4
-        with:
-          name: charybdis-firmware
-          path: |
-            zmk_firmware/build/zephyr/*.uf2
+    uses: petejohanson/zmk/.github/workflows/build-user-config.yml@core/zephyr-3.5-update
