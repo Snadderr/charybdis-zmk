@@ -16,31 +16,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install Zephyr dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip ninja-build cmake gcc-arm-none-eabi gperf
+          pip3 install --user west
+
       - name: Fetch ZMK firmware
         run: |
           git clone --depth 1 https://github.com/zmkfirmware/zmk.git zmk_firmware
           cd zmk_firmware
           west init -l app
           west update
-          west zephyr-export
-
-      - name: Install Dependencies
-        run: |
-          pip install --user west
-          pip install -r zmk_firmware/app/zephyr/scripts/requirements.txt
-
-      - name: Build Charybdis Firmware (Left)
-        run: |
-          cd zmk_firmware
-          west build -s app -b nice_nano_v2 -- -DZMK_CONFIG=$GITHUB_WORKSPACE/config -DSHIELD=charybdis_left
-
-      - name: Build Charybdis Firmware (Right)
-        run: |
-          cd zmk_firmware
-          west build -s app -b nice_nano_v2 -- -DZMK_CONFIG=$GITHUB_WORKSPACE/config -DSHIELD=charybdis_right
-
-      - name: Upload Firmware
-        uses: actions/upload-artifact@v4
-        with:
-          name: charybdis-firmware
-          path: zmk_firmware/build/zephyr/zmk.uf2
+          west
