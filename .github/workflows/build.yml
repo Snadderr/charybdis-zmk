@@ -14,15 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # ✅ Updated to latest version
 
       - name: Fetch ZMK firmware
         run: |
-          git clone --depth 1 https://github.com/zmkfirmware/zmk.git
-          mv zmk zmk_firmware
+          git clone --depth 1 https://github.com/zmkfirmware/zmk.git zmk_firmware
 
       - name: Set up Zephyr and West
-        uses: zmkfirmware/setup-zephyr@main
+        run: |
+          pip install --user west
+          west init -l zmk_firmware/app
+          west update
+          west zephyr-export
+          pip install -r zmk_firmware/app/zephyr/scripts/requirements.txt
 
       - name: Build Charybdis Firmware (Left)
         run: |
@@ -33,7 +37,7 @@ jobs:
           west build -s zmk_firmware/app -b nice_nano_v2 -- -DZMK_CONFIG=$GITHUB_WORKSPACE/config -DSHIELD=charybdis_right
 
       - name: Upload Firmware
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ Updated to latest version
         with:
           name: charybdis-firmware
           path: build/zephyr/zmk.uf2
